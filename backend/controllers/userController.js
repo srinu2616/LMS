@@ -1,4 +1,4 @@
-import { User } from "@clerk/express"
+
 import { Purchase } from "../models/Purchase.js"
 import User from "../models/User.js"
 import Stripe from "stripe"
@@ -26,7 +26,7 @@ export const getUserData=async(req,res)=>{
 export const userEnrolledCourses=async(req,res)=>{
   try{
     const userId=req.auth.userId
-    const userData=await User.findbyId(userId).populate('enrolledCourses')
+    const userData=await User.findById(userId).populate('enrolledCourses')
     
     res.json({success:true,enrolledCourses:userData.enrolledCourses})
   }

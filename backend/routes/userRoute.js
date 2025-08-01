@@ -5,7 +5,7 @@ const userRouter=express.Router()
 
 userRouter.get('/data',getUserData)
 userRouter.get('/enrolled-courses',userEnrolledCourses)
-useRouter.post('/purchase',purchaseCourse)
+userRouter.post('/purchase',purchaseCourse)
 
 
 userRouter.post('/update-course-progress',updateUserCourseProgess)
