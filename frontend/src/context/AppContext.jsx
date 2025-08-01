@@ -3,18 +3,23 @@ import { dummyCourses } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import humanizeDuration from 'humanize-duration';
 import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from 'axios'
+import { toast } from "react-toastify";
 
 
 
 export const AppContext=createContext();
 
 export const AppContextProvider=(props)=>{
+
+  const backendUrl=import.meta.env.VITE_BACKEND_URL
   
   const currency=import.meta.env.VITE_CURRENCY
   
   const [allCourses,setAllCourses]=useState([])
-  const [isEducator,setisEducator]=useState(true)
+  const [isEducator,setisEducator]=useState(false)
   const [enrolledCourses,setEnrolledCourses]=useState([])
+  const [userData,setUserData]=useState(null)
   const navigate=useNavigate()
 
   const {getToken}=useAuth()
@@ -23,7 +28,42 @@ export const AppContextProvider=(props)=>{
   
 
   const fetchAllCourses=async()=>{
-    setAllCourses(dummyCourses)
+    try{
+     const {data}= await axios.get(backendUrl +'/api/course/all')
+     
+     if(data.success){
+      setAllCourses(data.courses)
+     }
+     else{
+      toast.error(data.message)
+     }
+    }
+    catch(error){
+      toast.error(error.message)
+    }
+  }
+
+  //Fetch UserData
+  const fetchUserData=async()=>{{
+    setisEducator(true)
+  }
+    if(user.publicMetadata.role=='educator')
+
+    try{
+      const token=await getToken();
+
+     const {data}= await axios.get(backendUrl+'/api/user/data',{headers:{Authorization:`Bearer ${token}`}})
+
+     if(data.success){
+      setUserData(data.user)
+     }
+     else{
+      toast.error(data.message)
+     }
+    }
+    catch(error){
+      toast.error(error.message)
+    }
   }
 
   //Function to calculate average rating of course
@@ -36,7 +76,7 @@ export const AppContextProvider=(props)=>{
     course.courseRatings.forEach(rating => {
       totalRating += rating.rating;
     });
-    return totalRating / course.courseRatings.length;
+    return Math.floor(totalRating / course.courseRatings.length);
   }
 
   //Function to calculate course chapter time
@@ -70,28 +110,43 @@ export const AppContextProvider=(props)=>{
 
   //Fetch usese enrolled Courses
   const fetchUserEnrolledCourses=async()=>{
-    setEnrolledCourses(dummyCourses)
+    try{
+      const token=await getToken();
+      const {data}=await axios.get(backendUrl+'/api/user/enrolled-courses',{headers:{Authorization:`Bearer ${token}`}})
+  
+      if(data.success){
+        setEnrolledCourses(data.enrolledCourses.reverse())
+      }
+      else{
+        toast.error(data.message)
+      }
+
+    }
+    catch(error){
+      toast.error(error.message)
+
+    }
+  
   }
 
   useEffect(()=>{
     fetchAllCourses();
-    fetchUserEnrolledCourses(); 
+    
 
   },[])
 
-  const logToken=async()=>{
-    console.log(await getToken());
-  }
+  
 
   useEffect(()=>{
     if(user){
-      logToken()
+      fetchUserData()
+      fetchUserEnrolledCourses();
     }
 
   },[user])
   
   const value={
-    currency, allCourses,fetchAllCourses,navigate,calculateRating,isEducator,setisEducator,calculateNoOfLectures,calculateCourseDuration,calculateChapterTime,enrolledCourses,fetchUserEnrolledCourses
+    currency, allCourses,fetchAllCourses,navigate,calculateRating,isEducator,setisEducator,calculateNoOfLectures,calculateCourseDuration,calculateChapterTime,enrolledCourses,fetchUserEnrolledCourses,backendUrl,userData,setUserData,getToken,
 
   }
 
