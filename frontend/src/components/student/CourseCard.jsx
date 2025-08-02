@@ -29,7 +29,7 @@ const CourseCard = ({ course }) => {
           {course.courseTitle}
         </h3>
         <p className="text-sm text-gray-500 mb-3">
-          By kuruva srinivasulu
+          {course.educator.className}
         </p>
 
         {/* Rating */}

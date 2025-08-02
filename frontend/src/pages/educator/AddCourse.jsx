@@ -1,17 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import axios from "axios";
 import uniqid from "uniqid";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { assets } from "../../assets/assets";
+import { AppContext } from "../../context/AppContext";
+import { toast } from "react-toastify";
 
 const AddCourse = () => {
+
+  const {backendUrl,getToken}=useContext(AppContext)
   const quillRef = useRef(null);
   const editorRef = useRef(null);
   const [image, setImage] = useState(null); // Added missing image state
 
   const [courseTitle, setCourseTitle] = useState("");
   const [coursePrice, setCoursePrice] = useState(0);
-  const [discount, setDiscount] = useState(null);
+  const [discount, setDiscount] = useState(0);
   const [chapters, setChapters] = useState([]);
   const [showPopup, setShowPop] = useState(false);
   const [currentChapterId, setCurrentChapterId] = useState(null);
@@ -95,8 +100,45 @@ const AddCourse = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Submit logic here
+    try{
+      e.preventDefault();
+      if(!image){
+        toast.error('Thumbnail Not selected')
+      }
+      const courseData={
+        courseTitle,
+        courseDescription:quillRef.current.root.innerHTML,
+        coursePrice:Number(coursePrice),
+        discount:Number(discount),
+        courseContent:chapters,
+      }
+
+      const formData=new FormData()
+      formData.append('courseData',JSON.stringify(courseData))
+      formData.append('image',image)
+
+      const token=await getToken()
+      const {data}=await axios.post(backendUrl+'/api/educator/add-course',formData,{headers:{Authorization:`Bearer ${token}`}})
+
+      if(data.success){
+        toast.success(data.message)
+        setCourseTitle("")
+        setCoursePrice(0)
+        setDiscount(0)
+        setImage(null)
+        setChapters([])
+        quillRef.current.root.innerHTML=""
+      }
+      else{
+        toast.error(data.message)
+      }
+    }
+    catch(error){
+      toast.error(error.message)
+
+    }
+    
+    
   };
 
   useEffect(() => {
